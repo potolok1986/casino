@@ -1,0 +1,240 @@
+<script>
+    /**
+     * Document Ready
+     */
+    $(function () {
+
+        // Configure our wheel
+        var opts = {
+            welcomeText : '{% if get_wheel_fortune_spins_count(app.user) <= 0 %}{{ text_block_service.textBlockForFlash('wheel_fortune_money')|raw }}{% else %}{{ text_block_service.textBlockForFlash('wheel_fortune_free')|raw }}{% endif %}',
+            attempts: {{ wheelAttempts }},
+            determinedGetUrl: '{{ path('loyalty_wheelFortune_base_spin', {'type': 'paid'}) }}',
+            envDev : false,
+            callback: function () {
+                $.ajax({
+                    url: "/cash-in",
+                    type: "GET",
+                    dataType: 'json',
+                    success: function(data) {
+                        if (data.type == 'redirect') {
+                            location.replace('/register');
+                        }
+                        payment_data = data.data;
+                        popup_manager.openPopup({html: data.html});
+                    }
+                });
+            }
+        };
+        var $wheel = $('[data-wheel="container"]');
+        var $wheelSpinButton = $('[data-wheel="spin"]');
+        var $wheelWelcomeAlert = $('[data-wheel="welcome-alert"]');
+
+        // Call function to draw the wheel face at it's initial position.
+        WheelFortuneMobile.init(opts);
+
+        // Check Spins
+        (function checkSpins() {
+
+            $.ajax({
+                type: "POST",
+                url: '{{ path('loyalty_wheelFortune_base_check_spins', {'type': 'paid'}) }}',
+                cache: false,
+                success: function(result) {
+
+                    if (result.spins > 0) {
+
+                        $wheelSpinButton.removeClass('paid');
+                    }
+                }
+            });
+
+        })();
+
+        // Change Attempts Event
+        $wheel.on({
+
+            changeAttempts: function () {
+
+                var $attempts = $('[data-wheel="attempts"]');
+                var attemptsCount = $attempts.text();
+
+                if (attemptsCount > 0) {
+                    $attempts.text(attemptsCount - 1);
+                }
+            },
+
+            getPrize: function () {
+                // Check spins ajax request
+                $.ajax({
+                    type: "POST",
+                    url: '{{ path('loyalty_wheelFortune_base_check_spins', {'type': 'paid'}) }}',
+                    cache: false,
+                    success: function(result) {
+
+                        var spinsAmount = result.spins;
+
+                        if ( spinsAmount > 0 ) {
+
+                            var $attempts = $('[data-wheel="attempts"]');
+
+                            if (parseInt($attempts.text()) == 0 && parseInt(spinsAmount) == 1) {
+
+                                // Change free Spin button
+                                $wheelSpinButton.removeClass('paid');
+
+                                $attempts.text(1);
+
+                                // Show Welcome Alert
+                                $wheelWelcomeAlert.html('<p>{{ text_block_service.textBlockForFlash('wheel_fortune_free')|raw }}</p>');
+                            }
+
+                            $wheel.find('[data-wheel="attempts"] span').text(spinsAmount);
+
+                        } else {
+
+                            // Change paid Spin button
+                            $wheelSpinButton.addClass('paid');
+
+                            // Show Welcome Alert
+                            $wheelWelcomeAlert.html('<p>{{ text_block_service.textBlockForFlash('wheel_fortune_money')|raw }}</p>');
+                        }
+
+                        if (spinsAmount < 0) {
+
+                            $wheelSpinButton.on('click', function() {
+                                opts.callback();
+                            });
+
+                        } else {
+
+                            $wheelSpinButton.removeClass('disable');
+                        }
+
+                    }
+                });
+            },
+
+            spin: function () {
+                $.ajax({
+                    type: "POST",
+                    url: '{{ path('loyalty_wheelFortune_base_check_spins', {'type': 'paid'}) }}',
+                    cache: false,
+                    success: function (result) {
+                        if (result.spins > 0) {
+
+                            var $attempts = $('[data-wheel="attempts"]');
+
+                            if ($attempts.text() > 0)
+                                $attempts.text(result.spins);
+                        }
+                    }
+                });
+            }
+        });
+
+        if (opts.envDev) console.time('Mobile wheel is inited by ');
+
+    });
+</script>
+
+<section class="content">
+
+    <section data-wheel="popup" class="content hide">
+        <div class="content-section bg-texture wof-bonus">
+
+            <h1>Поздравляем!</h1>
+
+            <h3>Ваш бонус:</h3>
+
+            <div data-wheel="sector" class="wof-pseudo-field sector-prize">
+                <span>100k</span>
+            </div>
+            <div class="box-bd box-bd--grey">
+                <button type="button" data-wheel="get-prize" class="btn btn-red">
+                    <span>Забрать</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <div data-wheel="container" class="best-wheel-container">
+        <div class="best-wheel-loader" data-wheel="loader">
+            <span>Loading...</span>
+        </div>
+
+        <div class="best-wheel" style="display: none;">
+
+            <!-- wheel buttons -->
+            <div class="best-wheel-btn-spin {% if wheelAttempts <= 0 %}paid{% endif %}" data-wheel="spin"></div>
+
+            <div class="best-wheel-needle"></div>
+
+            <!-- wheel -->
+            <div class="best-wheel-highlight-sector" data-wheel="highlight-sector"></div>
+            <canvas id="canvas" data-wheel="canvas"></canvas>
+
+            <div id="sectors-template" class="hide">
+                <svg version="1.1" xmlns:xlink="http://www.w3.org/2000/svg">
+                    <foreignObject width="100%" height="100%">
+                        <style type="text/css">
+                            .sector-prize {
+                                text-align: center;
+                                font-size: 2em;
+                                font-weight: bold;
+                                font-family: Arial Black, Arial, Helvetica Neue, Helvetica, Verdana, sans-serif;
+                                color: #ffee00;
+                                text-shadow: 0 3px 0 #c04e00, 0 2px 7px rgba(0, 0, 0, .75);
+                            }
+
+                            .sector-prize span {
+                                color: #FFFFFF;
+                                text-shadow: 0 3px 0 #8198bb, 0 2px 7px rgba(0, 0, 0, .75);
+                            }
+
+                            .sector-prize span.points {
+                                display: block;
+                                text-transform: uppercase;
+                                font-size: .5em;
+                            }
+                        </style>
+                        <div xmlns:xlink="http://www.w3.org/1999/xhtml">
+                            <div class="sector-prize">htmlContent</div>
+                        </div>
+                    </foreignObject>
+                </svg>
+            </div>
+
+            <audio data-wheel="audio"></audio>
+        </div>
+
+        <div class="landscape-mode">
+            <h2>Колесо фортуны не работает в горизонтальном режиме экрана</h2>
+
+            <p>Пожалуйста, поверните девайс в вертикальное положение.</p>
+        </div>
+
+    </div>
+
+    <div class="content-section bg-texture">
+        <div class="wof-content">
+            <legend class="legend">Попыток: <span class="text-yellow" data-wheel="attempts">0</span></legend>
+
+            <!-- welcome alert -->
+            <div class="best-wheel-alert" data-wheel="welcome-alert"></div>
+        </div>
+    </div>
+
+    <div class="content-section">
+        <div class="accordion">
+            <div class="accordion-item">
+                <div class="accordion-title">
+                    <div class="accordion-title-inner">Правила</div>
+                </div>
+                <div class="accordion-content">
+                    <p>{{ text_block_service.textBlockForFlash('wheel_fortune_rules')|raw }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</section>

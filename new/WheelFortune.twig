@@ -1,0 +1,232 @@
+  <div class="popup-close"></div>
+    <div class="popup-center best-wheel-container">
+        <div class="best-wheel-loader" data-wheel="loader">
+            <span>Loading...</span>
+        </div>
+
+        <div class="best-wheel" data-wheel="container" style="display: none;">
+            <div class="best-wheel-title"></div>
+            <div class="best-wheel-needle"></div>
+
+            <!-- wheel buttons -->
+            <div class="best-wheel-btn-spin" data-wheel="spin"></div>
+            <div class="best-wheel-btn-sound" data-wheel="sound"></div>
+            <div class="best-wheel-btn-info hide" data-wheel="info"></div>
+
+            <!-- welcome alert -->
+            <div class="best-wheel-alert" data-wheel="welcome-alert"></div>
+
+            <!-- lights around wheel -->
+            <ul class="best-wheel-lights" data-wheel="lights"></ul>
+
+            <!-- wheel -->
+            <div class="best-wheel-highlight-sector" data-wheel="highlight-sector"></div>
+            <canvas id="canvas" width="546" height="530" data-wheel="canvas"></canvas>
+
+            <!-- popup victory -->
+            <div class="best-wheel-victory" data-wheel="popup-victory">
+                <div class="best-wheel-congratulations"></div>
+                <div class="best-wheel-your-bonus"></div>
+                <div class="best-wheel-sum" data-wheel="prize"></div>
+                <div class="best-wheel-btn-get-prize" data-wheel="get-prize"></div>
+            </div>
+
+            <!-- popup defeat -->
+            <div class="best-wheel-defeat" data-wheel="popup-defeat">
+                <div class="best-wheel-capricious-fortune"></div>
+                <div class="best-wheel-sum" data-wheel="prize"></div>
+                <div class="best-wheel-btn-get-prize" data-wheel="get-prize"></div>
+            </div>
+
+            <!-- info popup -->
+            <div class="best-wheel-info" data-wheel="popup-info">
+                <div class="best-wheel-info-text"></div>
+                <div class="best-wheel-btn-close" data-wheel="popup-close"></div>
+            </div>
+
+            <!-- retry counter -->
+            <div class="best-wheel-attempts hide" data-wheel="attempts"></div>
+
+            <div class="best-wheel-denomination x1" data-wheel="denomination">
+
+                <div class="best-wheel-denomination-items">
+                    <div class="best-wheel-denomination-fill"></div>
+                    <ul data-wheel="range">
+                        <li>x1</li>
+                        <li>x2</li>
+                        <li>x5</li>
+                        <li>x10</li>
+                        <li>x50</li>
+                        <li>x100</li>
+                    </ul>
+                </div>
+
+                <div class="best-wheel-scale">
+                    <div class="best-wheel-snake"></div>
+                    <div class="best-wheel-denomination-needle"></div>
+                </div>
+            </div>
+
+            <audio data-wheel="audio"></audio>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * Document Ready
+         */
+        $(function() {
+
+            // If safari - add crutch
+            if (navigator.userAgent.indexOf('Safari') != -1 && navigator.userAgent.indexOf('Chrome') == -1)
+                $('.best-wheel-btn-get-prize').addClass('safari');
+
+            // Configure our wheel
+            var opts = {
+                welcomeText : '{% if get_wheel_fortune_spins_count(app.user) <= 0 %}{{ text_block_service.textBlockForFlash('wheel_fortune_money')|raw }}{% else %}{{ text_block_service.textBlockForFlash('wheel_fortune_free')|raw }}{% endif %}',
+                imageDir : 'wheelfortuneCash',
+                attempts : {{ get_wheel_fortune_spins_count(app.user) }},
+                wheelMode : 'paid',
+                {% if is_wheel_fortune_denomination() %}
+                    denomination : {{ get_wheel_fortune_denomination(app.user) }},
+                {% endif %}
+                popupHtml : '<p>{{ text_block_service.textBlockForFlash('wheel_fortune_rules')|raw }}</p>',
+                determinedGetUrl : '{{ path('loyalty_wheelFortune_base_spin', {'type': 'paid'}) }}',
+                callback : function() {
+
+                    // open cashier
+                    location.assign('/#popup-payments');
+                }
+            };
+            var $wheelFortunePaidBtn = $("#wheel_forune_paid_btn");
+            var $userBalance = $("#user_balance");
+            var $wheel = $('[data-wheel="container"]');
+            var $wheelSpinButton = $('[data-wheel="spin"]');
+            var $wheelWelcomeAlert = $('[data-wheel="welcome-alert"]');
+
+            // Call function to draw the wheel face at it's initial position.
+            WheelFortune.init(opts);
+
+            // Change Attempts Event
+            $wheel.on('changeAttempts', function() {
+
+                var $this = $(this),
+                    $attempts = $this.find('[data-wheel="attempts"] span'),
+                    attemptsCount = $attempts.text();
+
+                if (attemptsCount > 0) {
+                    $attempts.text(attemptsCount - 1);
+                }
+            });
+
+            // Check Spins
+            (function checkSpins() {
+
+                $.ajax({
+                    type: "POST",
+                    url: '{{ path('loyalty_wheelFortune_base_check_spins', {'type': 'paid'}) }}',
+                    cache: false,
+                    success: function(result) {
+                        if (result.denominationLock && typeof result.denomination === 'number') {
+                            WheelFortune.lockDenomination(result.denomination);
+                        }
+
+                        if ( $wheelFortunePaidBtn.length && result.spins > 0 ) {
+                            $wheelFortunePaidBtn.html('<i class="ico ico-wheel"></i><div class="msg">' + result.spins + '</div>');
+                        } else {
+                            $wheelWelcomeAlert.addClass('small');
+                            $wheelSpinButton.addClass('paid');
+                            $wheelFortunePaidBtn.html('<i class="ico ico-wheel"></i>');
+                        }
+                        if ( $userBalance.length ) $userBalance.html( result.balance );
+                    }
+                });
+            })();
+
+            // Get Prize Event
+            $wheel.on('getPrize', function() {
+
+                // Check spins ajax request
+                $.ajax({
+                    type: "POST",
+                    url: '{{ path('loyalty_wheelFortune_base_check_spins', {'type': 'paid'}) }}',
+                    cache: false,
+                    success: function(result) {
+
+                        var spinsAmount = result.spins;
+
+                        $wheel.find('[data-whee="attempts"] span').text( spinsAmount );
+
+                        if ( $wheelFortunePaidBtn.length && spinsAmount > 0 ) {
+
+                            $wheelFortunePaidBtn.html('<i class="ico ico-wheel"></i><div class="msg">' + spinsAmount + '</div>');
+
+                            var $attempts = $wheel.find('[data-wheel="attempts"] span');
+
+                            if ($attempts.text() === '0' && spinsAmount === 1) {
+
+                                // Change free Spin button
+                                $wheelSpinButton.removeClass('paid');
+
+                                // Show Welcome Alert
+                                $wheelWelcomeAlert
+                                        .html('<p>{{ text_block_service.textBlockForFlash('wheel_fortune_free')|raw }}</p>')
+                                        .removeClass('small hide');
+                            }
+
+                            $wheel.find('[data-wheel="attempts"] span').text(spinsAmount);
+
+                        } else {
+
+                            // Change paid Spin button
+                            $wheelSpinButton.addClass('paid');
+
+                            // Show Welcome Alert
+                            $wheelWelcomeAlert
+                                    .html('<p>{{ text_block_service.textBlockForFlash('wheel_fortune_money')|raw }}</p>')
+                                    .addClass('small')
+                                    .removeClass('hide');
+
+                            // Remove attempts from icon on userbar
+                            $wheelFortunePaidBtn.html('<i class="ico ico-wheel"></i>');
+
+                        }
+
+                        if (spinsAmount < 0) {
+
+                            $wheelSpinButton.on('click', function() {
+                                opts.callback();
+                            });
+
+                        } else {
+
+                            $wheelSpinButton.removeClass('disable');
+                        }
+
+                        if ( $userBalance.length ) $userBalance.html( result.balance );
+
+                        if (result.denominationLock) {
+
+                            WheelFortune.lockDenomination(result.denomination);
+
+                        } else {
+
+                            WheelFortune.unlockDenomination(result.denomination);
+                        }
+                    }
+                });
+
+                // Get prize ajax request
+                $.ajax({
+                    type: "POST",
+                    url: '{{ path('loyalty_wheelFortune_base_take_prize', {'type': 'paid'}) }}',
+                    cache: false,
+                    success: function(result) {
+                        if ( $userBalance.length ) $userBalance.html(result.balance)
+                    }
+                });
+
+            });
+
+        });
+    </script>
