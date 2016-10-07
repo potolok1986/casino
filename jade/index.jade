@@ -1,0 +1,12 @@
+extends layout
+block content
+	.container(ng-controller="mainCtrl as main")
+		.content
+			.wheel-container
+				div(dr-wheel="{{angle}}")
+				.cursor
+			.server-result-wrap
+				h3 Ответ сервера
+				br
+				select(ng-model="angle")
+					option(ng-repeat="color in main.colors" ng-value="$index * 45" ng-bind="color")
