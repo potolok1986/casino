@@ -8,5 +8,6 @@ block content
 			.server-result-wrap
 				h3 Ответ сервера
 				br
+				h3(ng-bind="angle")
 				select(ng-model="angle")
-					option(ng-repeat="color in main.colors" ng-value="$index * 45" ng-bind="color")
+					option(ng-repeat="color in main.colors" ng-value="360 - ($index * 45)" ng-bind="color")

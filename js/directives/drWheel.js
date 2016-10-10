@@ -7,25 +7,39 @@ rotate.directive("drWheel", ["$timeout", function ($timeout) {
         link: function postLink($scope, elem) {
             var $wheel = elem.find("img"),
                 $container = elem.find("div"),
-                angle = 0,
+                angleRotateWrap = 0,
+                angleRotate = 0,
+                oldAngle = 0,
+                animateDuration = 6000,
                 bounceEaseOut = makeEaseOut(bounce);
 
             $scope.getAngle = function () {
-                rotateWheel(360 - (parseInt($scope.angle) || 0));
+                rotateWheel(parseInt($scope.angle) || 0);
             };
 
             function rotateWheel(newAngle) {
-                $container[0].style.transform = "rotate(" + angle + "deg)";
-                angle += newAngle;
+                angleRotate = calculateAngleRotation(newAngle);
+                $container[0].style.transform = "rotate(" + angleRotateWrap + "deg)";
+                angleRotateWrap = newAngle;
+                $scope.waiting = true;
                 animate({
-                    duration: 6000,
+                    duration: animateDuration,
                     timing: bounceEaseOut,
                     draw: function (progress) {
-                        $wheel[0].style.transform = "rotate(" + progress * ( angle ) + "deg)";
+                        $wheel[0].style.transform = "rotate(" + progress * (angleRotate + 720) + "deg)";
                     }
                 });
+                $timeout(function () {
+                    oldAngle = newAngle;
+                    $scope.waiting = false;
+                },animateDuration + 30)
+
             }
 
+            function calculateAngleRotation(newAngle) {
+                console.log(newAngle,oldAngle);
+                return newAngle >= oldAngle ? newAngle - oldAngle : 360 + (newAngle - oldAngle)
+            }
             function animate(options) {
                 var start = performance.now();
                 requestAnimationFrame(function animate(time) {

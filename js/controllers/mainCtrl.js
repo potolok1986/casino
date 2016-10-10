@@ -1,4 +1,4 @@
 rotate.controller("mainCtrl",[function () {
     var main = this;
-    main.colors = ["Orange","Violet","Sapphirine","Blue","Green","Yellow","Red","Black"]
+    main.colors = ["Sapphirine","Blue","Green","Yellow","Red","Black","Orange","Violet"]
 }]);
