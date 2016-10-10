@@ -1,6 +1,4 @@
 casino.directive("drWheel", ["Animation", function (Animation) {
-
-
     return {
         templateUrl: 'directives/drWheel.html',
         scope: {
@@ -34,8 +32,6 @@ casino.directive("drWheel", ["Animation", function (Animation) {
             $scope.getAngle = function () {
                 animation.rotateWheel(parseInt($scope.angle) || 0);
             };
-
-
         }
     }
 }]);
