@@ -15,18 +15,19 @@ casino.directive("drWheel", ["Animation", function (Animation) {
                 this.angleRotate = newAngle >= this.oldAngle ? newAngle - this.oldAngle : 360 + (newAngle - this.oldAngle)
             };
             animation.rotateWheel = function(newAngle){
-                animation.calculateAngleRotation(newAngle);
-                $container[0].style.transform = "rotate(" + animation.angleRotateWrap + "deg)";
-                animation.angleRotateWrap = newAngle;
+                var $this = this;
+                $this.calculateAngleRotation(newAngle);
+                $container[0].style.transform = "rotate(" + $this.angleRotateWrap + "deg)";
+                $this.angleRotateWrap = newAngle;
                 $scope.waiting = true;
-                animation.animate({
-                    duration: animation.delay,
-                    timing: animation.makeEaseOut(animation.bounce),
+                $this.animate({
+                    duration: $this.delay,
+                    timing: $this.makeEaseOut($this.bounce),
                     draw: function (progress) {
-                        $wheel[0].style.transform = "rotate(" + progress * (animation.angleRotate + animation.circles) + "deg)";
+                        $wheel[0].style.transform = "rotate(" + progress * ($this.angleRotate + $this.circles) + "deg)";
                     }
                 }, function () {
-                    animation.oldAngle = newAngle;
+                    $this.oldAngle = newAngle;
                     $scope.waiting = false;
                 });
             };
