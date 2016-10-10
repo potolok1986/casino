@@ -84,7 +84,7 @@ var WheelFortuneMobile = {
         a.$wheelContainer.css({height: t.wheelSize + 20});
         var o = function (e) {
             var n = $(window).width() > $(window).height() ? "landscape" : "portrait";
-            "portrait" == n ? (t.dynamicStyles(r), t.initialDraw(), a.$wheelContainer.removeClass("please-rotate-device")) : (a.$wheelContainer.addClass("please-rotate-device"), a.$wheelContainer.css("height", window.screen.height)), "function" == typeof e && e()
+            "portrait" == n ? (t.dynamicStyles(r), t.initialDraw(), a.$wheelContainer.removeClass("please-casino-device")) : (a.$wheelContainer.addClass("please-casino-device"), a.$wheelContainer.css("height", window.screen.height)), "function" == typeof e && e()
         };
         if (function () {
                 o()

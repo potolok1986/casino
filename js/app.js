@@ -1,1 +1,1 @@
-var rotate = angular.module("wheelFortune",[]);
+var casino = angular.module("wheelFortune",[]);
