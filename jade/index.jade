@@ -5,9 +5,31 @@ block content
 			.wheel-container
 				div(dr-wheel="{{angle}}")
 				.cursor
-			.server-result-wrap
-				h3 Ответ сервера
-				br
-				h3(ng-bind="angle")
-				select(ng-model="angle")
-					option(ng-repeat="color in main.colors" ng-value="360 - ($index * 45)" ng-bind="color")
+			.table
+				form(name="wheel")
+					div
+						h3(ng-bind="'Выпало ' + main.win.type")
+						br
+					h1(ng-bind="'Your balance ' + main.totalCoast")
+					h2(ng-bind="main.winText")
+					br
+					.pin-wrap
+						input(type="checkbox" ng-model="main.bets.one")
+						lable 1$
+						input(type="checkbox" ng-model="main.bets.two")
+						lable 2$
+						input(type="checkbox" ng-model="main.bets.five")
+						lable 5$
+						input(type="checkbox" ng-model="main.bets.ten")
+						lable 10$
+						input(type="checkbox" ng-model="main.bets.twenty")
+						lable 20$
+						input(type="checkbox" ng-model="main.bets.joker")
+						lable joker
+						input(type="checkbox" ng-model="main.bets.casino")
+						lable logo
+					.bet
+						label Your bet is:
+						input(type="text" ng-model="main.bet")
+					.spin
+						button(ng-click="main.getAngle()" ng-disabled="!main.bet || main.waiting") Spin
