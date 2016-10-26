@@ -2,34 +2,26 @@ extends layout
 block content
 	.container(ng-controller="mainCtrl as main")
 		.content
+			.win-result
+				h2(ng-bind="'WIN Result ' + main.win.type")
+				h2(ng-bind="main.winText")
 			.wheel-container
 				div(dr-wheel="{{angle}}")
 				.cursor
+				button.spin(ng-click="main.getAngle()" ng-disabled="!main.bet || main.waiting") Spin
 			.table
-				form(name="wheel")
-					div
-						h3(ng-bind="'Выпало ' + main.win.type")
-						br
-					h1(ng-bind="'Your balance ' + main.totalCoast")
-					h2(ng-bind="main.winText")
-					br
-					.pin-wrap
-						input(type="checkbox" ng-model="main.bets.one")
-						lable 1$
-						input(type="checkbox" ng-model="main.bets.two")
-						lable 2$
-						input(type="checkbox" ng-model="main.bets.five")
-						lable 5$
-						input(type="checkbox" ng-model="main.bets.ten")
-						lable 10$
-						input(type="checkbox" ng-model="main.bets.twenty")
-						lable 20$
-						input(type="checkbox" ng-model="main.bets.joker")
-						lable joker
-						input(type="checkbox" ng-model="main.bets.casino")
-						lable logo
-					.bet
-						label Your bet is:
-						input(type="text" ng-model="main.bet")
-					.spin
-						button(ng-click="main.getAngle()" ng-disabled="!main.bet || main.waiting") Spin
+				br
+				.pin-wrap
+					.dr-checked(ng-model="main.bets.one.value" title="main.bets.one.title")
+					.dr-checked(ng-model="main.bets.two.value" title="main.bets.two.title")
+					.dr-checked(ng-model="main.bets.five.value" title="main.bets.five.title")
+					.dr-checked(ng-model="main.bets.ten.value" title="main.bets.ten.title")
+					.dr-checked(ng-model="main.bets.twenty.value" title="main.bets.twenty.title")
+					.dr-checked(ng-model="main.bets.joker.value" title="main.bets.joker.title")
+					.dr-checked(ng-model="main.bets.casino.value" title="main.bets.casino.title")
+				.bet
+					.dr-checked(ng-model="main.bet" title="'Your bet'" min="1")
+			.balance-wrap
+				span Your balance:
+				.balance
+					span(ng-bind="main.totalCoast")

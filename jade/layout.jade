@@ -1,12 +1,13 @@
 doctype
 html
-	header
+	head
 		title test rotation
 		link(rel="stylesheet" href="css/main.css")
 
 	body(ng-app="wheelFortune")
+		header
+			h1 Try your luck
 		block content
-
 
 		script(src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js")
 
@@ -15,6 +16,7 @@ html
 		script(src="js/controllers/mainCtrl.js")
 
 		script(src="js/directives/drWheel.js")
+		script(src="js/directives/drChecked.js")
 
 		script(src="js/services/Animation.js")
 		script(src="js/services/winTable.js")
